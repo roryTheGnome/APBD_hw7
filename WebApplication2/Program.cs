@@ -1,10 +1,12 @@
 namespace WebApplication2;
 
 public class Program
-{
+{ //I did not change much here comparing to how it init itself
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        builder.Services.AddControllers();//FORGETTING TO ADD THIS COST ME 30 MIN AND MY MENTAL HEALTH
+
 
         // Add services to the container.
         builder.Services.AddAuthorization();
@@ -26,6 +28,9 @@ public class Program
 
         app.UseAuthorization();
 
+        app.MapControllers();
+        
+        /*
         var summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -45,7 +50,7 @@ public class Program
             })
             .WithName("GetWeatherForecast")
             .WithOpenApi();
-
+*/
         app.Run();
     }
 }

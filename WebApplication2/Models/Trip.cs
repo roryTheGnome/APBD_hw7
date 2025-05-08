@@ -9,6 +9,6 @@ public class Trip
     public DateTime DateFrom { get; set; }
     public DateTime DateTo { get; set; }
     public int MaxPeople { get; set; }
-    //check if i need to create lists for Client_Trip and Country_Trip
+    public List<String>Countries { get; set; } = new();
 
 }
