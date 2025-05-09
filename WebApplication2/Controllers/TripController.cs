@@ -50,7 +50,7 @@ public class TripController: ControllerBase
                 DateTo = (DateTime)rdr["DateTo"],
                 MaxPeople = (int)rdr["MaxPeople"],
                 Countries = new List<string>() 
-            };  //i add an updater cause {insert exp here im lazy}
+            };  
             tripDicti[id].Countries.Add(rdr["Country"].ToString());
         }
         return Ok(tripDicti.Values);//check what happens if i use .toList()
