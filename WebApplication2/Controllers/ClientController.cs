@@ -143,4 +143,28 @@ public class ClientController : ControllerBase
         
     }
     
+    [HttpDelete("{id}/trips/{tripId}")]
+    public async Task<IActionResult> CancelClientTrip(int id, int tripId, CancellationToken token)
+    {
+        await using var con = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+        await using var com = new SqlCommand(@"
+        DELETE FROM Client_Trip
+        WHERE IdClient = @id AND IdTrip = @tripId
+    ", con);
+
+        com.Parameters.AddWithValue("@id", id);
+        com.Parameters.AddWithValue("@tripId", tripId);
+
+        await con.OpenAsync(token);
+        var rowsAffected = await com.ExecuteNonQueryAsync(token);
+
+        if (rowsAffected == 0)
+        {
+            return NotFound("No such registery exists.");
+        }
+
+        return Ok("done.");
+    }
+
+    
 }

@@ -50,7 +50,7 @@ public class Program
             })
             .WithName("GetWeatherForecast")
             .WithOpenApi();
-*/
+*/ //i kept this part just because
         app.Run();
     }
 }
