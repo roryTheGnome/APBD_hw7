@@ -82,4 +82,65 @@ public class ClientController : ControllerBase
 
         return CreatedAtAction(nameof(GetClientTrips), new { id = idd }, client);
     }
+
+    
+    [HttpPut("{id}/trips/{tripId}")]
+    public async Task<IActionResult> RegisterTrip(int id, int trip, CancellationToken token)
+    {
+        await using var con = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+        await con.OpenAsync(token);
+        await using var transaction=await con.BeginTransactionAsync(token);
+
+        try
+        {
+            await using (var checkClient = new SqlCommand("SELECT 1 FROM Client WHERE IdClient = @id", con, (SqlTransaction)transaction))
+            {
+                checkClient.Parameters.AddWithValue("@id", id);
+                var exists = await checkClient.ExecuteScalarAsync(token);
+                if (exists == null)
+                    return NotFound($"Client {id} does not exist.");
+            }//NOTE TO FUTURE SELF: no need to delete this part in order to shrink the code
+            
+            await using (var checkTrip = new SqlCommand("SELECT 1 FROM Trip WHERE IdTrip = @tripId", con, (SqlTransaction)transaction))
+            {
+                checkTrip.Parameters.AddWithValue("@tripId", trip);
+                var exists = await checkTrip.ExecuteScalarAsync(token);
+                if (exists == null)
+                    return NotFound($"Trip {trip} does not exist.");
+            }
+            
+            await using (var checkExisting = new SqlCommand(@"
+            SELECT 1 FROM Client_Trip WHERE IdClient = @id AND IdTrip = @tripId
+        ", con, (SqlTransaction)transaction))
+            {
+                checkExisting.Parameters.AddWithValue("@id", id);
+                checkExisting.Parameters.AddWithValue("@tripId", trip);
+                var exists = await checkExisting.ExecuteScalarAsync(token);
+                if (exists != null)
+                    return BadRequest($"Client {id} is already registered for trip {trip}.");
+            }
+            
+            await using (var insert = new SqlCommand(@"
+            INSERT INTO Client_Trip (IdClient, IdTrip, RegisteredAt)
+            VALUES (@id, @tripId, @registeredAt)
+        ", con, (SqlTransaction)transaction))
+            {
+                insert.Parameters.AddWithValue("@id", id);
+                insert.Parameters.AddWithValue("@tripId", trip);
+                insert.Parameters.AddWithValue("@registeredAt", DateTime.UtcNow);
+
+                await insert.ExecuteNonQueryAsync(token);
+            }
+            
+            await transaction.CommitAsync(token);
+            return Ok($"registiry success");
+        }
+        catch
+        {
+            await transaction.RollbackAsync(token);
+            return StatusCode(500, "Internal server error.");
+        }
+        
+    }
+    
 }
